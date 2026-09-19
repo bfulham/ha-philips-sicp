@@ -18,6 +18,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+
 FieldKind = Literal["enum", "number", "ascii"]
 Platform = Literal[
     "select", "number", "switch", "sensor", "binary_sensor", "button"
@@ -184,6 +186,8 @@ class FieldSpec:
     no_change: int | None = None  # Set-side sentinel meaning "leave as is"
     platform: Platform = "sensor"
     diagnostic: bool = False
+    device_class: SensorDeviceClass | None = None
+    state_class: SensorStateClass | None = None
 
     def decode(self, raw: bytes) -> int | str:
         if self.kind == "ascii":
@@ -313,11 +317,15 @@ FEATURES: tuple[Feature, ...] = (
             get_extra=b"\x02"),
     Feature("operating_hours", "Operating Hours", "diagnostic", 0x0F, None,
             (_f("value", "Operating Hours", "number", width=2, unit="h",
-                platform="sensor", diagnostic=True, max_value=65535),),
+                platform="sensor", diagnostic=True, max_value=65535,
+                device_class=SensorDeviceClass.DURATION,
+                state_class=SensorStateClass.TOTAL_INCREASING),),
             get_extra=b"\x02"),
     Feature("temperature_1", "Temperature Sensor 1", "diagnostic", 0x2F, None,
             (_f("value", "Temperature Sensor 1", "number", unit="°C",
-                platform="sensor", max_value=100),),),
+                platform="sensor", max_value=100,
+                device_class=SensorDeviceClass.TEMPERATURE,
+                state_class=SensorStateClass.MEASUREMENT),),),
     Feature("serial_number", "Serial Number", "diagnostic", 0x15, None,
             (_f("value", "Serial Number", "ascii", platform="sensor", diagnostic=True),),),
     Feature("video_signal_present", "Video Signal Present", "diagnostic", 0x59, None,
@@ -536,6 +544,10 @@ FEATURES: tuple[Feature, ...] = (
              _pct("h_position", "H Position"), _pct("v_position", "V Position")),),
 
     # ---- 9. Date & Time ---------------------------------------------------
+    # "clock" is claimed by datetime.py (combined with the "date" composite
+    # into a single datetime entity) and "auto_restart" is claimed by
+    # time.py (combined with its own "enabled" switch) - see
+    # CLAIMED_BY_DATETIME / CLAIMED_BY_TIME below.
     Feature("clock", "Clock", "datetime", 0x87, 0x86,
             (_f("hour", "Hour", "number", min_value=0, max_value=23, platform="number"),
              _f("minute", "Minute", "number", min_value=0, max_value=59, platform="number")),
@@ -585,3 +597,11 @@ FEATURES_BY_KEY: dict[str, Feature] = {f.key: f for f in FEATURES}
 CLAIMED_BY_MEDIA_PLAYER: frozenset[str] = frozenset(
     {"power_state", "input_source", "volume", "mute"}
 )
+
+# "clock" (this file) plus the "date" composite (composite.py) are combined
+# into one datetime.py entity instead of five separate number sliders.
+CLAIMED_BY_DATETIME: frozenset[str] = frozenset({"clock"})
+
+# "auto_restart"'s hour/minute fields are combined into one time.py entity
+# alongside its "enabled" switch (which switch.py still creates normally).
+CLAIMED_BY_TIME: frozenset[str] = frozenset({"auto_restart"})
