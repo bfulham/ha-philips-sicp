@@ -136,7 +136,7 @@ LANGUAGE_OPTIONS: dict[int, str] = {
     0x01: "English", 0x02: "Español", 0x03: "Français", 0x04: "Italiano",
     0x05: "Latviešu", 0x06: "Lietuvių", 0x07: "Nederlands", 0x08: "Norsk bokmål",
     0x09: "Polski", 0x0A: "Português", 0x0B: "Suomi", 0x0C: "Svenska",
-    0x0D: "Türkçe", 0x0E: "Pыccкий", 0x0F: "Arabic", 0x10: "Simplified Chinese",
+    0x0D: "Türkçe", 0x0E: "Русский", 0x0F: "Arabic", 0x10: "Simplified Chinese",
     0x11: "Traditional Chinese", 0x12: "Japanese", 0x13: "Čeština", 0x14: "Dansk",
     0x15: "Deutsch", 0x16: "Eesti", 0x17: "Ελληνικά",
 }
@@ -364,7 +364,7 @@ FEATURES: tuple[Feature, ...] = (
              _f("_osd_style", "OSD Style", "number", platform="sensor", diagnostic=True),
              _f("_mute_style", "Mute Style", "number", platform="sensor", diagnostic=True)),),
     Feature("boot_source", "Boot on Source", "input", 0xBA, 0xBB,
-            (_enum("source", "Boot on Source", BOOT_SOURCE_OPTIONS),
+            (_enum("source", "Video Source", BOOT_SOURCE_OPTIONS),
              _f("tag", "Bookmark/Playlist Tag", "number", max_value=8,
                 platform="number")),
             min_sicp_version=(2, 5)),
@@ -373,12 +373,12 @@ FEATURES: tuple[Feature, ...] = (
                 0: "Off", 1: "All", 3: "PC sources only",
                 4: "Video sources only", 5: "Failover"}),)),
     Feature("pip_mode", "Picture-in-Picture", "picture", 0x3D, 0x3C,
-            (_enum("mode", "PIP Mode", {
+            (_enum("mode", "Mode", {
                 0: "Off", 1: "On (PIP)", 2: "POP", 3: "Quick swap",
                 4: "PBP 2 windows", 5: "PBP 3 windows", 6: "PBP 4 windows",
                 7: "PBP 3 windows (1)", 8: "PBP 3 windows (2)",
                 9: "PBP 4 windows (1)", 10: "Custom (SICP)"}),
-             _enum("position", "PIP Position", {
+             _enum("position", "Position", {
                  0: "Bottom left", 1: "Top left", 2: "Top right",
                  3: "Bottom right", 4: "Center"}),
              _f("_reserved1", "Reserved", "number", platform="sensor", diagnostic=True),
@@ -394,12 +394,12 @@ FEATURES: tuple[Feature, ...] = (
     Feature("mute", "Mute", "audio", 0x46, 0x47, (_bool("value", "Mute"),),
             min_sicp_version=(2, 0)),
     Feature("speaker_volume_limits", "Speaker Volume Limits", "audio", 0xB6, 0xB8,
-            (_pct("min", "Speaker Min Volume"), _pct("max", "Speaker Max Volume"),
-             _pct("switch_on", "Speaker Switch-on Volume")),
+            (_pct("min", "Min Volume"), _pct("max", "Max Volume"),
+             _pct("switch_on", "Switch-on Volume")),
             min_sicp_version=(1, 88)),
     Feature("audio_out_volume_limits", "Audio Out Volume Limits", "audio", 0xB7, 0xB9,
-            (_pct("min", "Audio Out Min Volume"), _pct("max", "Audio Out Max Volume"),
-             _pct("switch_on", "Audio Out Switch-on Volume")),
+            (_pct("min", "Min Volume"), _pct("max", "Max Volume"),
+             _pct("switch_on", "Switch-on Volume")),
             min_sicp_version=(1, 88)),
     Feature("speakers_on_off", "Speakers", "audio", 0x8F, 0x8E,
             (_bool("value", "Speakers"),), min_sicp_version=(2, 7)),
@@ -532,8 +532,8 @@ FEATURES: tuple[Feature, ...] = (
                 8: "Ramp", 9: "White 12%", 10: "White 25%", 11: "White 65%"}),),
             min_sicp_version=(2, 6)),
     Feature("vga_parameters", "VGA Parameters", "picture", 0x39, 0x38,
-            (_pct("clock", "VGA Clock"), _pct("clock_phase", "VGA Clock Phase"),
-             _pct("h_position", "VGA H Position"), _pct("v_position", "VGA V Position")),),
+            (_pct("clock", "Clock"), _pct("clock_phase", "Clock Phase"),
+             _pct("h_position", "H Position"), _pct("v_position", "V Position")),),
 
     # ---- 9. Date & Time ---------------------------------------------------
     Feature("clock", "Clock", "datetime", 0x87, 0x86,
@@ -546,9 +546,9 @@ FEATURES: tuple[Feature, ...] = (
     Feature("time_zone", "Time Zone", "datetime", 0x8B, 0x8A,
             (_enum("value", "Time Zone", TIME_ZONE_OPTIONS),), min_sicp_version=(2, 7)),
     Feature("auto_restart", "Auto Restart", "misc", 0x9E, 0x9F,
-            (_bool("enabled", "Auto Restart Enabled"),
-             _f("hour", "Restart Hour", "number", min_value=0, max_value=24, platform="number"),
-             _f("minute", "Restart Minute", "number", min_value=0, max_value=60, platform="number")),
+            (_bool("enabled", "Enabled"),
+             _f("hour", "Hour", "number", min_value=0, max_value=24, platform="number"),
+             _f("minute", "Minute", "number", min_value=0, max_value=60, platform="number")),
             min_sicp_version=(2, 7)),
 
     # ---- 11. Miscellaneous ------------------------------------------------
