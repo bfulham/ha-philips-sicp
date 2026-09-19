@@ -22,14 +22,12 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from . import composite
 from .const import CONF_DISPLAYS, CONF_GROUP_ID, CONF_MONITOR_ID, DOMAIN, PLATFORMS
 from .coordinator import SICPDisplayCoordinator
-from .features import REMOTE_KEY_OPTIONS
 from .protocol import SICPClient, SICPConnectionError
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEVICE_ID = "device_id"
 
-SERVICE_SEND_REMOTE_KEY = "send_remote_key"
 SERVICE_SET_IP_PARAMETER = "set_ip_parameter"
 SERVICE_SET_MONITOR_ID = "set_monitor_id"
 SERVICE_SET_FAILOVER = "set_failover_priority"
@@ -91,14 +89,8 @@ def _find_coordinator(hass: HomeAssistant, device_id: str) -> SICPDisplayCoordin
 
 
 def _async_register_services(hass: HomeAssistant) -> None:
-    if hass.services.has_service(DOMAIN, SERVICE_SEND_REMOTE_KEY):
+    if hass.services.has_service(DOMAIN, SERVICE_SET_IP_PARAMETER):
         return
-
-    async def send_remote_key(call: ServiceCall) -> None:
-        coordinator = _find_coordinator(hass, call.data[ATTR_DEVICE_ID])
-        key_name = call.data["key"]
-        key = next(code for code, name in REMOTE_KEY_OPTIONS.items() if name == key_name)
-        await composite.send_remote_key(coordinator.client, coordinator.monitor_id, coordinator.group_id, key)
 
     async def set_ip_parameter(call: ServiceCall) -> None:
         coordinator = _find_coordinator(hass, call.data[ATTR_DEVICE_ID])
@@ -126,13 +118,6 @@ def _async_register_services(hass: HomeAssistant) -> None:
             coordinator.client, coordinator.monitor_id, coordinator.group_id, call.data.get("page", 0)
         )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_SEND_REMOTE_KEY, send_remote_key,
-        schema=vol.Schema({
-            vol.Required(ATTR_DEVICE_ID): cv.string,
-            vol.Required("key"): vol.In(sorted(set(REMOTE_KEY_OPTIONS.values()))),
-        }),
-    )
     hass.services.async_register(
         DOMAIN, SERVICE_SET_IP_PARAMETER, set_ip_parameter,
         schema=vol.Schema({
