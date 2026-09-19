@@ -1,6 +1,10 @@
 """Number entities: Feature registry numeric fields, plus the composite
-commands (Tiling, Frame Compensation, Stretch, Date, Tuner Channel) that
-are naturally numeric but don't fit the Feature/FieldSpec model."""
+commands (Tiling, Frame Compensation, Stretch, Tuner Channel) that are
+naturally numeric but don't fit the Feature/FieldSpec model.
+
+Date/Time and Auto Restart's hour/minute fields are NOT handled here -
+they're combined into single datetime.py/time.py entities instead of
+separate raw number sliders (see CLAIMED_BY_DATETIME / CLAIMED_BY_TIME)."""
 from __future__ import annotations
 
 from homeassistant.components.number import NumberEntity, NumberMode
@@ -13,7 +17,16 @@ from . import composite
 from .const import DOMAIN
 from .coordinator import SICPDisplayCoordinator
 from .entity import SICPEntity
-from .features import CLAIMED_BY_MEDIA_PLAYER, FEATURES, Feature, FieldSpec
+from .features import (
+    CLAIMED_BY_DATETIME,
+    CLAIMED_BY_MEDIA_PLAYER,
+    CLAIMED_BY_TIME,
+    FEATURES,
+    Feature,
+    FieldSpec,
+)
+
+_SKIPPED_FEATURES = CLAIMED_BY_MEDIA_PLAYER | CLAIMED_BY_DATETIME | CLAIMED_BY_TIME
 
 
 async def async_setup_entry(
@@ -23,7 +36,7 @@ async def async_setup_entry(
     entities: list[SICPEntity] = []
     for coordinator in coordinators:
         for feature in FEATURES:
-            if feature.key in CLAIMED_BY_MEDIA_PLAYER or feature.set_code is None:
+            if feature.key in _SKIPPED_FEATURES or feature.set_code is None:
                 continue
             if not coordinator.supports(feature.key):
                 continue
@@ -43,10 +56,6 @@ async def async_setup_entry(
             entities.append(FrameCompensationNumber(coordinator, "frame_v_bottom", "Frame Comp. Bottom", True, 2))
         if coordinator.supports("stretch"):
             entities.append(StretchNumber(coordinator))
-        if coordinator.supports("date"):
-            entities.append(DateNumber(coordinator, "day", "Date - Day", 1, 31))
-            entities.append(DateNumber(coordinator, "month", "Date - Month", 1, 12))
-            entities.append(DateNumber(coordinator, "year", "Date - Year", 2000, 9999))
         if coordinator.supports("channel"):
             entities.append(ChannelNumber(coordinator))
     async_add_entities(entities)
@@ -54,6 +63,7 @@ async def async_setup_entry(
 
 class SICPFieldNumber(SICPEntity, NumberEntity):
     _attr_mode = NumberMode.BOX
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, coordinator: SICPDisplayCoordinator, feature: Feature, spec: FieldSpec) -> None:
         super().__init__(coordinator, f"{feature.key}_{spec.key}")
@@ -64,8 +74,6 @@ class SICPFieldNumber(SICPEntity, NumberEntity):
         self._attr_native_max_value = spec.max_value
         self._attr_native_step = spec.step
         self._attr_native_unit_of_measurement = spec.unit
-        if spec.diagnostic:
-            self._attr_entity_category = EntityCategory.CONFIG
 
     @property
     def native_value(self) -> float | None:
@@ -77,6 +85,7 @@ class SICPFieldNumber(SICPEntity, NumberEntity):
 
 class TilingNumber(SICPEntity, NumberEntity):
     _attr_mode = NumberMode.BOX
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, coordinator, field: str, name: str, minimum: int, maximum: int) -> None:
         super().__init__(coordinator, f"tiling_{field}")
@@ -100,6 +109,7 @@ class FrameCompensationNumber(SICPEntity, NumberEntity):
     _attr_native_min_value = 0
     _attr_native_max_value = 100
     _attr_native_unit_of_measurement = "%"
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, coordinator, key: str, name: str, vertical: bool, selector: int) -> None:
         super().__init__(coordinator, key)
@@ -129,6 +139,7 @@ class StretchNumber(SICPEntity, NumberEntity):
     _attr_native_max_value = 540
     _attr_native_step = 10
     _attr_native_unit_of_measurement = "%"
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, coordinator: SICPDisplayCoordinator) -> None:
         super().__init__(coordinator, "stretch_value")
@@ -143,28 +154,9 @@ class StretchNumber(SICPEntity, NumberEntity):
         )
 
 
-class DateNumber(SICPEntity, NumberEntity):
-    _attr_mode = NumberMode.BOX
-
-    def __init__(self, coordinator, field: str, name: str, minimum: int, maximum: int) -> None:
-        super().__init__(coordinator, f"date_{field}")
-        self._field = field
-        self._attr_name = name
-        self._attr_native_min_value = minimum
-        self._attr_native_max_value = maximum
-        self._attr_entity_category = EntityCategory.CONFIG
-
-    @property
-    def native_value(self) -> float | None:
-        return ((self.coordinator.data or {}).get("date") or {}).get(self._field)
-
-    async def async_set_native_value(self, value: float) -> None:
-        await self.coordinator.async_write_composite(
-            "date", composite.set_date, **{self._field: int(value)}
-        )
-
-
 class ChannelNumber(SICPEntity, NumberEntity):
+    """Tuner channel - a primary operational control, not a config setting."""
+
     _attr_name = "Tuner Channel"
     _attr_mode = NumberMode.BOX
     _attr_native_min_value = 0

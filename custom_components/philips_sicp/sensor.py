@@ -55,6 +55,8 @@ class SICPFieldSensor(SICPEntity, SensorEntity):
         self._spec = spec
         self._attr_name = spec.name if feature.single_field else f"{feature.name} {spec.name}"
         self._attr_native_unit_of_measurement = spec.unit
+        self._attr_device_class = spec.device_class
+        self._attr_state_class = spec.state_class
         if spec.diagnostic:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -34,6 +35,8 @@ async def async_setup_entry(
 
 
 class SICPFieldSelect(SICPEntity, SelectEntity):
+    _attr_entity_category = EntityCategory.CONFIG
+
     def __init__(self, coordinator: SICPDisplayCoordinator, feature: Feature, spec: FieldSpec) -> None:
         super().__init__(coordinator, f"{feature.key}_{spec.key}")
         self._feature = feature
@@ -57,6 +60,7 @@ class SICPImageAllSelect(SICPEntity, SelectEntity):
     """The 'Image All' rotation mode inside the composite Image Rotation command."""
 
     _attr_name = "Image Rotation"
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, coordinator: SICPDisplayCoordinator) -> None:
         super().__init__(coordinator, "image_rotation_image_all")

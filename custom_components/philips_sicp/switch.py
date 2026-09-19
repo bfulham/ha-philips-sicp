@@ -6,6 +6,7 @@ from __future__ import annotations
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import composite
@@ -51,6 +52,8 @@ async def async_setup_entry(
 
 
 class SICPFieldSwitch(SICPEntity, SwitchEntity):
+    _attr_entity_category = EntityCategory.CONFIG
+
     def __init__(self, coordinator: SICPDisplayCoordinator, feature: Feature, spec: FieldSpec) -> None:
         super().__init__(coordinator, f"{feature.key}_{spec.key}")
         self._feature = feature
@@ -70,6 +73,8 @@ class SICPFieldSwitch(SICPEntity, SwitchEntity):
 
 
 class TilingSwitch(SICPEntity, SwitchEntity):
+    _attr_entity_category = EntityCategory.CONFIG
+
     def __init__(self, coordinator: SICPDisplayCoordinator, field: str, name: str) -> None:
         super().__init__(coordinator, f"tiling_{field}")
         self._field = field
@@ -88,6 +93,7 @@ class TilingSwitch(SICPEntity, SwitchEntity):
 
 class StretchSwitch(SICPEntity, SwitchEntity):
     _attr_name = "Stretch"
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, coordinator: SICPDisplayCoordinator) -> None:
         super().__init__(coordinator, "stretch_enabled")
@@ -104,6 +110,8 @@ class StretchSwitch(SICPEntity, SwitchEntity):
 
 
 class ImageRotationSwitch(SICPEntity, SwitchEntity):
+    _attr_entity_category = EntityCategory.CONFIG
+
     def __init__(self, coordinator: SICPDisplayCoordinator, field: str, name: str) -> None:
         super().__init__(coordinator, f"image_rotation_{field}")
         self._field = field
