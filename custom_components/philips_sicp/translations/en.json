@@ -47,10 +47,6 @@
     }
   },
   "services": {
-    "send_remote_key": {
-      "name": "Send remote key",
-      "description": "Simulates a remote-control key press."
-    },
     "set_ip_parameter": {
       "name": "Set IP parameter",
       "description": "Changes a network parameter. Can strand the display off the network if misused."
